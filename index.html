@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.15/dist/sweetalert2.all.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;  /* Menggunakan Poppins */
@@ -118,6 +119,17 @@
         <!-- Form input jadwal -->
         <form id="jadwalForm">
             <div class="mb-4">
+                <select id="hari" class="form-select" required>
+                    <option value="Senin">Senin</option>
+                    <option value="Selasa">Selasa</option>
+                    <option value="Rabu">Rabu</option>
+                    <option value="Kamis">Kamis</option>
+                    <option value="Jumat">Jumat</option>
+                    <option value="Sabtu">Sabtu</option>
+                    <option value="Minggu">Minggu</option>
+                </select>
+            </div>            
+            <div class="mb-4">
                 <input type="text" class="form-control" id="jamStart" placeholder="Jam Mulai (HH:MM)" required>
             </div>
             <div class="mb-4">
@@ -150,13 +162,14 @@
             <table class="table table-bordered table-striped" id="tabelJadwal">
                 <thead>
                     <tr>
+                        <th>Hari</th>
                         <th>Jam</th>
                         <th>Mata Kuliah</th>
                         <th>Dosen</th>
                         <th>Lokasi</th>
                         <th>Status</th>
                     </tr>
-                </thead>
+                </thead>                
                 <tbody>
                     <!-- Jadwal akan ditampilkan di sini -->
                 </tbody>
@@ -178,9 +191,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Fungsi untuk menyimpan jadwal ke sessionStorage
-        function simpanJadwal(jamStart, jamFinish, mataKuliah, dosen, lokasi, onlineOffline, judul) {
+        function simpanJadwal(jamStart, jamFinish, mataKuliah, dosen, lokasi, onlineOffline, judul, hari) {
             let jadwal = JSON.parse(sessionStorage.getItem("jadwal")) || [];
-            jadwal.push({ jamStart, jamFinish, mataKuliah, dosen, lokasi, onlineOffline, judul });
+            jadwal.push({ jamStart, jamFinish, mataKuliah, dosen, lokasi, onlineOffline, judul, hari });
             sessionStorage.setItem("jadwal", JSON.stringify(jadwal));
         }
 
@@ -198,11 +211,12 @@
 
             jadwal.forEach(item => {
                 let row = tabel.insertRow();
-                row.insertCell(0).textContent = item.jamStart + " - " + item.jamFinish;
-                row.insertCell(1).textContent = item.mataKuliah;
-                row.insertCell(2).textContent = item.dosen;
-                row.insertCell(3).textContent = item.lokasi;
-                row.insertCell(4).textContent = item.onlineOffline.charAt(0).toUpperCase() + item.onlineOffline.slice(1);  // Format 'online' atau 'offline'
+                row.insertCell(0).textContent = item.hari;  // Menampilkan hari
+                row.insertCell(1).textContent = item.jamStart + " - " + item.jamFinish;
+                row.insertCell(2).textContent = item.mataKuliah;
+                row.insertCell(3).textContent = item.dosen;
+                row.insertCell(4).textContent = item.lokasi;
+                row.insertCell(5).textContent = item.onlineOffline.charAt(0).toUpperCase() + item.onlineOffline.slice(1);  // Format 'online' atau 'offline'
             });
         }
 
@@ -217,6 +231,7 @@
             let lokasi = document.getElementById("lokasi").value;
             let onlineOffline = document.getElementById("onlineOffline").value;
             let judul = document.getElementById("judulJadwal").value;
+            let hari = document.getElementById("hari").value;
 
             if (judul.trim() === "") {
                 Swal.fire({
@@ -227,7 +242,7 @@
                 return;
             }
 
-            simpanJadwal(jamStart, jamFinish, mataKuliah, dosen, lokasi, onlineOffline, judul);
+            simpanJadwal(jamStart, jamFinish, mataKuliah, dosen, lokasi, onlineOffline, judul, hari);
             tampilkanJadwal();
 
             // Reset form setelah disubmit
@@ -240,13 +255,14 @@
             });
         });
 
-        // Fungsi untuk mengunduh jadwal sebagai gambar
         document.getElementById("downloadBtn").addEventListener("click", function() {
-            // Pastikan tabel sudah ter-render sepenuhnya
-            let jadwalContainer = document.getElementById("jadwalTabel");
+            const { jsPDF } = window.jspdf;  // Mengambil jsPDF dari pustaka
         
-            // Cek apakah ada jadwal yang ditampilkan
-            if (jadwalContainer.innerHTML.trim() === "") {
+            // Membuat instance jsPDF
+            const doc = new jsPDF();
+            let jadwal = JSON.parse(sessionStorage.getItem("jadwal")) || [];
+        
+            if (jadwal.length === 0) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Oops...',
@@ -255,32 +271,77 @@
                 return;
             }
         
-            html2canvas(jadwalContainer, {
-                useCORS: true,  // Gunakan CORS untuk gambar eksternal
-                scrollX: 0,     // Menghindari scroll jika ada
-                scrollY: -window.scrollY, // Menghindari scroll jika ada
-                backgroundColor: "#fff",  // Pastikan latar belakang putih jika diperlukan
-            }).then(function(canvas) {
-                let link = document.createElement("a");
-                link.download = "jadwal_mata_kuliah.png";
-                link.href = canvas.toDataURL(); // Mengonversi canvas menjadi data URL
-                link.click(); // Men-trigger download
+            // Menambahkan judul jadwal
+            doc.setFontSize(18);
+            doc.setFont("helvetica", "bold");
+            doc.text(jadwal[0].judul, 105, 20, null, null, "center");
         
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Jadwal Diunduh!',
-                    text: 'Jadwal berhasil diunduh sebagai gambar.',
-                });
-            }).catch(function(error) {
-                console.error("Terjadi kesalahan saat mencoba mengunduh jadwal:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'Terjadi kesalahan saat mencoba mengunduh jadwal.',
-                });
+            // Menambahkan header tabel
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+        
+            let startY = 30;
+            let colWidth = [35, 35, 45, 35, 45];  // Lebar kolom yang lebih terstruktur (tanpa status)
+            let headers = ["Hari", "Jam", "Mata Kuliah", "Dosen", "Lokasi"];
+            let startX = 10;
+        
+            // Header Table (tanpa background warna)
+            doc.setTextColor(0, 0, 0);  // Mengatur warna teks menjadi hitam
+            headers.forEach((header, index) => {
+                // Membuat border untuk setiap kolom header
+                doc.rect(startX, startY, colWidth[index], 10); // Membuat border untuk header
+                doc.text(header, startX + (colWidth[index] / 2), startY + 6, null, null, "center"); // Menempatkan teks di tengah kolom
+                startX += colWidth[index];  // Menambahkan lebar kolom
             });
-        });        
+            startY += 10; // Jarak setelah header
+        
+            // Menambahkan border untuk seluruh tabel dan menampilkan data
+            doc.setDrawColor(0, 0, 0); // Warna border hitam
+            doc.setLineWidth(0.5); // Ketebalan garis
+        
+            // Menyusun data jadwal dan menampilkan setiap baris dalam 1 tabel
+            jadwal.forEach((item, index) => {
+                let rowStartX = 10;
+        
+                // Menggambar border untuk setiap cell
+                doc.rect(rowStartX, startY, colWidth[0], 10); // Hari
+                doc.rect(rowStartX + colWidth[0], startY, colWidth[1], 10); // Jam
+                doc.rect(rowStartX + colWidth[0] + colWidth[1], startY, colWidth[2], 10); // Mata Kuliah
+                doc.rect(rowStartX + colWidth[0] + colWidth[1] + colWidth[2], startY, colWidth[3], 10); // Dosen
+                doc.rect(rowStartX + colWidth[0] + colWidth[1] + colWidth[2] + colWidth[3], startY, colWidth[4], 10); // Lokasi
+        
+                // Menambahkan data ke dalam tabel
+                doc.text(item.hari, rowStartX + (colWidth[0] / 2), startY + 6, null, null, "center");
+                doc.text(`${item.jamStart} - ${item.jamFinish}`, rowStartX + colWidth[0] + (colWidth[1] / 2), startY + 6, null, null, "center");
+                doc.text(item.mataKuliah, rowStartX + colWidth[0] + colWidth[1] + (colWidth[2] / 2), startY + 6, null, null, "center");
+                doc.text(item.dosen, rowStartX + colWidth[0] + colWidth[1] + colWidth[2] + (colWidth[3] / 2), startY + 6, null, null, "center");
+                doc.text(item.lokasi, rowStartX + colWidth[0] + colWidth[1] + colWidth[2] + colWidth[3] + (colWidth[4] / 2), startY + 6, null, null, "center");
+        
+                // Tanpa menambah jarak setelah baris
+                startY += 10; // Tetap di baris yang sama, tanpa gap
+            });
 
+            // Menambahkan footer
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(0, 0, 0); // Mengatur warna teks menjadi hitam
+
+            let footerText = "https://berkatsiallagan.github.io/jadwal-kuliah/";
+            let pageNumber = doc.internal.pageSize.height - 10; // Posisi footer (terletak di bawah halaman)
+            
+            doc.text(footerText, 105, pageNumber, null, null, "center"); // Menambahkan footer
+            doc.text(`Halaman ${doc.internal.getNumberOfPages()}`, 200, pageNumber, null, null, "right"); // Menambahkan nomor halaman
+                
+            // Mengunduh sebagai file PDF
+            doc.save('jadwal_mata_kuliah.pdf');
+        
+            Swal.fire({
+                icon: 'success',
+                title: 'Jadwal Diunduh!',
+                text: 'Jadwal berhasil diunduh sebagai file PDF.',
+            });
+        });
+        
         // Fungsi untuk menghapus jadwal yang disimpan
         document.getElementById("hapusBtn").addEventListener("click", function() {
             Swal.fire({
