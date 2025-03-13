@@ -5,7 +5,7 @@ Aplikasi web untuk mengelola jadwal mata kuliah secara interaktif. Pengguna dapa
 ## Fitur Utama
 - **Tambah Jadwal**: Pengguna dapat memasukkan jadwal mata kuliah dengan detail seperti jam mulai, jam selesai, nama mata kuliah, dosen pengajar, dan lokasi (untuk status offline).
 - **Pengelolaan Status**: Memilih status **online** atau **offline** untuk masing-masing mata kuliah. Jika status **offline**, pengguna dapat mengisi lokasi fisik.
-- **Unduh Jadwal**: Pengguna dapat mengunduh jadwal yang sudah dimasukkan dalam format gambar (PNG).
+- **Unduh Jadwal**: Pengguna dapat mengunduh jadwal yang sudah dimasukkan dalam format file PDF.
 - **Hapus Jadwal**: Fitur untuk menghapus seluruh jadwal yang telah disimpan.
 
 ## Teknologi yang Digunakan
