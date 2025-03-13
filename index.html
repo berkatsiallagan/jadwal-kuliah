@@ -244,24 +244,42 @@
         document.getElementById("downloadBtn").addEventListener("click", function() {
             // Pastikan tabel sudah ter-render sepenuhnya
             let jadwalContainer = document.getElementById("jadwalTabel");
-
-            html2canvas(jadwalContainer, { 
-                useCORS: true, // Menggunakan CORS untuk gambar yang dapat diakses
-                scrollX: 0,    // Menghindari scroll jika ada
+        
+            // Cek apakah ada jadwal yang ditampilkan
+            if (jadwalContainer.innerHTML.trim() === "") {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Tidak ada jadwal untuk diunduh!',
+                });
+                return;
+            }
+        
+            html2canvas(jadwalContainer, {
+                useCORS: true,  // Gunakan CORS untuk gambar eksternal
+                scrollX: 0,     // Menghindari scroll jika ada
                 scrollY: -window.scrollY, // Menghindari scroll jika ada
+                backgroundColor: "#fff",  // Pastikan latar belakang putih jika diperlukan
             }).then(function(canvas) {
                 let link = document.createElement("a");
                 link.download = "jadwal_mata_kuliah.png";
                 link.href = canvas.toDataURL(); // Mengonversi canvas menjadi data URL
                 link.click(); // Men-trigger download
-
+        
                 Swal.fire({
                     icon: 'success',
                     title: 'Jadwal Diunduh!',
                     text: 'Jadwal berhasil diunduh sebagai gambar.',
                 });
+            }).catch(function(error) {
+                console.error("Terjadi kesalahan saat mencoba mengunduh jadwal:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Terjadi kesalahan saat mencoba mengunduh jadwal.',
+                });
             });
-        });
+        });        
 
         // Fungsi untuk menghapus jadwal yang disimpan
         document.getElementById("hapusBtn").addEventListener("click", function() {
