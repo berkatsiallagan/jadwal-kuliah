@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Mata Kuliah</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.15/dist/sweetalert2.all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;  /* Menggunakan Poppins */
+            background: linear-gradient(135deg, #6f42c1, #ff6f61); /* Gradient background */
+            color: #fff;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 30px;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent dark background */
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        h2, h3, h4 {
+            color: #ffffff;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            color: #333;
+        }
+
+        .btn {
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #6f42c1;
+            border: none;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+        }
+
+        .footer {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            margin-top: 20px;
+            width: 100%;
+            bottom: 0;
+            text-align: center;
+            color: #fff;
+            border-top: 1px solid #ddd;
+        }
+
+        .footer p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .table th, .table td {
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid #ddd;
+        }
+
+        table#tabelJadwal tbody td {
+            color: white;  /* Mengubah warna font di baris tabel menjadi putih */
+        }
+    
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            h3 {
+                font-size: 1.25rem;
+            }
+
+            .btn {
+                font-size: 0.9rem;
+                width: 100%;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5" style="margin-top: 20px;">
+        <h2 class="text-center">Masukkan Jadwal Mata Kuliah</h2>
+
+        <!-- Input untuk Judul Jadwal -->
+        <div class="mb-4">
+            <input type="text" class="form-control" id="judulJadwal" placeholder="Masukkan Judul Jadwal" required>
+        </div>
+
+        <!-- Form input jadwal -->
+        <form id="jadwalForm">
+            <div class="mb-4">
+                <input type="text" class="form-control" id="jamStart" placeholder="Jam Mulai (HH:MM)" required>
+            </div>
+            <div class="mb-4">
+                <input type="text" class="form-control" id="jamFinish" placeholder="Jam Selesai (HH:MM)" required>
+            </div>
+            <div class="mb-4">
+                <input type="text" class="form-control" id="mataKuliah" placeholder="Mata Kuliah" required>
+            </div>
+            <div class="mb-4">
+                <input type="text" class="form-control" id="dosen" placeholder="Dosen Pengajar" required>
+            </div>
+            <div class="mb-4">
+                <select id="onlineOffline" class="form-select" required>
+                    <option value="online">Online</option>
+                    <option value="offline">Offline</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <input type="text" class="form-control" id="lokasi" placeholder="Lokasi (buat aja zoom jika online)" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Tambah Jadwal</button>
+        </form>
+
+        <h3 class="mt-5">Jadwal Mata Kuliah Anda:</h3>
+
+        <!-- Tempat untuk menampilkan jadwal -->
+        <div id="jadwalTabel">
+            <!-- Judul Jadwal yang ditambahkan secara dinamis -->
+            <h4 id="judulTabel"></h4>
+            <table class="table table-bordered table-striped" id="tabelJadwal">
+                <thead>
+                    <tr>
+                        <th>Jam</th>
+                        <th>Mata Kuliah</th>
+                        <th>Dosen</th>
+                        <th>Lokasi</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Jadwal akan ditampilkan di sini -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tombol Download dan Hapus Jadwal -->
+        <div class="d-flex justify-content-between mt-4">
+            <button id="downloadBtn" class="btn btn-success">Download Jadwal sebagai Gambar</button>
+            <button id="hapusBtn" class="btn btn-danger">Hapus Jadwal</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2025 Jadwal Mata Kuliah - Dibuat dengan ❤️ oleh <strong><a href="https://berkat.my.id" target="_blank" style="color: #ff6f61;">Berkat Tua Siallagan</a></strong></p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Fungsi untuk menyimpan jadwal ke sessionStorage
+        function simpanJadwal(jamStart, jamFinish, mataKuliah, dosen, lokasi, onlineOffline, judul) {
+            let jadwal = JSON.parse(sessionStorage.getItem("jadwal")) || [];
+            jadwal.push({ jamStart, jamFinish, mataKuliah, dosen, lokasi, onlineOffline, judul });
+            sessionStorage.setItem("jadwal", JSON.stringify(jadwal));
+        }
+
+        // Fungsi untuk menampilkan jadwal dari sessionStorage
+        function tampilkanJadwal() {
+            let jadwal = JSON.parse(sessionStorage.getItem("jadwal")) || [];
+            let tabel = document.getElementById("tabelJadwal").getElementsByTagName("tbody")[0];
+            let judulTabel = document.getElementById("judulTabel");
+
+            tabel.innerHTML = ""; // Kosongkan tabel
+            if (jadwal.length > 0) {
+                // Menampilkan judul jadwal yang disimpan
+                judulTabel.textContent = jadwal[0].judul;  // Menampilkan judul jadwal pertama
+            }
+
+            jadwal.forEach(item => {
+                let row = tabel.insertRow();
+                row.insertCell(0).textContent = item.jamStart + " - " + item.jamFinish;
+                row.insertCell(1).textContent = item.mataKuliah;
+                row.insertCell(2).textContent = item.dosen;
+                row.insertCell(3).textContent = item.lokasi;
+                row.insertCell(4).textContent = item.onlineOffline.charAt(0).toUpperCase() + item.onlineOffline.slice(1);  // Format 'online' atau 'offline'
+            });
+        }
+
+        // Menangani form input jadwal
+        document.getElementById("jadwalForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            let jamStart = document.getElementById("jamStart").value;
+            let jamFinish = document.getElementById("jamFinish").value;
+            let mataKuliah = document.getElementById("mataKuliah").value;
+            let dosen = document.getElementById("dosen").value;
+            let lokasi = document.getElementById("lokasi").value;
+            let onlineOffline = document.getElementById("onlineOffline").value;
+            let judul = document.getElementById("judulJadwal").value;
+
+            if (judul.trim() === "") {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Silakan masukkan judul jadwal! ',
+                });
+                return;
+            }
+
+            simpanJadwal(jamStart, jamFinish, mataKuliah, dosen, lokasi, onlineOffline, judul);
+            tampilkanJadwal();
+
+            // Reset form setelah disubmit
+            document.getElementById("jadwalForm").reset();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Jadwal Ditambahkan!',
+                text: 'Jadwal mata kuliah Anda berhasil ditambahkan.',
+            });
+        });
+
+        // Fungsi untuk mengunduh jadwal sebagai gambar
+        document.getElementById("downloadBtn").addEventListener("click", function() {
+            // Pastikan tabel sudah ter-render sepenuhnya
+            let jadwalContainer = document.getElementById("jadwalTabel");
+
+            html2canvas(jadwalContainer, { 
+                useCORS: true, // Menggunakan CORS untuk gambar yang dapat diakses
+                scrollX: 0,    // Menghindari scroll jika ada
+                scrollY: -window.scrollY, // Menghindari scroll jika ada
+            }).then(function(canvas) {
+                let link = document.createElement("a");
+                link.download = "jadwal_mata_kuliah.png";
+                link.href = canvas.toDataURL(); // Mengonversi canvas menjadi data URL
+                link.click(); // Men-trigger download
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Jadwal Diunduh!',
+                    text: 'Jadwal berhasil diunduh sebagai gambar.',
+                });
+            });
+        });
+
+        // Fungsi untuk menghapus jadwal yang disimpan
+        document.getElementById("hapusBtn").addEventListener("click", function() {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data jadwal Anda akan dihapus!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    sessionStorage.removeItem("jadwal");
+                    tampilkanJadwal(); // Menampilkan tabel yang sudah kosong
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Jadwal Terhapus',
+                        text: 'Semua jadwal telah dihapus.',
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Penghapusan Dibatalkan',
+                        text: 'Jadwal Anda aman.',
+                    });
+                }
+            });
+        });
+
+        // Tampilkan jadwal dari sessionStorage saat halaman dimuat
+        window.onload = tampilkanJadwal;
+    </script>
+
+</body>
+</html>
